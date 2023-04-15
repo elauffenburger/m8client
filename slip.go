@@ -22,22 +22,26 @@ func (e errSlipDecodingFailed) Error() string {
 	return fmt.Sprintf("SLIP decoding failed; remaining data: %v", e.remaining)
 }
 
-func readSLIP(file *os.File) ([]byte, error) {
-	buf := make([]byte, 4*1024)
-
-	_, err := file.Read(buf)
-	if err != nil {
-		return nil, errors.Wrap(err, "error reading SLIP data from file")
-	}
-
-	return buf, nil
+type slipReader struct {
+	escaped bool
+	prev    []byte
 }
 
-func decodeSLIP(data []byte) ([]slipPacket, error) {
+func (r *slipReader) read(dev *os.File) ([]byte, error) {
+	buf := make([]byte, 4*1024)
+
+	n, err := dev.Read(buf)
+	if err != nil {
+		return nil, errors.Wrap(err, "error reading SLIP data from device")
+	}
+
+	return buf[:n], nil
+}
+
+func (r *slipReader) decode(data []byte) ([]slipPacket, error) {
 	var (
-		packet  slipPacket
 		packets []slipPacket
-		escaped = false
+		packet  slipPacket = r.prev
 	)
 
 	for _, ch := range data {
@@ -45,26 +49,27 @@ func decodeSLIP(data []byte) ([]slipPacket, error) {
 		case slipEnd:
 			if len(packet) > 0 {
 				packets = append(packets, packet)
-				packet = nil
 			}
+
+			packet = nil
 
 			continue
 
 		case slipEsc:
-			escaped = true
+			r.escaped = true
 			continue
 
 		case slipEscEnd:
-			if escaped {
-				escaped = false
+			if r.escaped {
+				r.escaped = false
 				packet = append(packet, slipEnd)
 			}
 
 			continue
 
 		case slipEscEsc:
-			if escaped {
-				escaped = false
+			if r.escaped {
+				r.escaped = false
 				packet = append(packet, slipEsc)
 			}
 
@@ -75,9 +80,7 @@ func decodeSLIP(data []byte) ([]slipPacket, error) {
 		}
 	}
 
-	if len(packet) != 0 {
-		return nil, errSlipDecodingFailed{packet}
-	}
+	r.prev = packet
 
 	return packets, nil
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -15,12 +16,18 @@ var (
 )
 
 func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("panic: %+v", err)
+		}
+	}()
+
 	dev, err := os.OpenFile(defaultDeviceName, os.O_RDWR, 0666)
 	if err != nil {
 		panic(errors.Wrap(err, "error opening device"))
 	}
 
-	controller := controller{log.New(os.Stderr, "m8client", log.Flags()), dev, 0}
+	controller := controller{log.New(os.Stderr, "m8client", log.Flags()), &slipReader{}, dev, 0}
 	if err := controller.enableAndResetDisplay(); err != nil {
 		panic(err)
 	}

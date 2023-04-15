@@ -14,6 +14,7 @@ type controllerContext struct {
 type controller struct {
 	logger *log.Logger
 
+	slip   *slipReader
 	device *os.File
 	input  uint8
 }
@@ -26,13 +27,13 @@ func (c controller) enableAndResetDisplay() error {
 	return nil
 }
 
-func (c controller) nextCmds() ([]cmd, error) {
-	buf, err := readSLIP(c.device)
+func (c *controller) nextCmds() ([]cmd, error) {
+	buf, err := c.slip.read(c.device)
 	if err != nil {
 		return nil, err
 	}
 
-	packets, err := decodeSLIP(buf)
+	packets, err := c.slip.decode(buf)
 	if err != nil {
 		return nil, err
 	}
