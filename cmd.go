@@ -159,8 +159,8 @@ func decodeCommand(packet []byte) (cmd, error) {
 			return nil, errInvalidCmdLen{"draw osc wave", 4, packet}
 		}
 
-		if waveformLength := n - 4; waveformLength != 0 && waveformLength != screenWidth {
-			return nil, errors.WithStack(errInvalidCmdLen{"draw osc wave data", screenWidth, packet})
+		if waveformLength := n - 4; waveformLength != 0 && waveformLength != int(screenWidth) {
+			return nil, errors.WithStack(errInvalidCmdLen{"draw osc wave data", int(screenWidth), packet})
 		}
 
 		return DrawOscilloscopeWaveformCommand{decodeColor(packet[1:]), packet[4:]}, nil
