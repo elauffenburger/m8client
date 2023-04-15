@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"golang.org/x/sys/unix"
 )
 
 var defaultDeviceName = "/dev/cu.usbmodem136136901"
@@ -22,17 +23,21 @@ func main() {
 		}
 	}()
 
-	dev, err := os.OpenFile(defaultDeviceName, os.O_RDWR, 0666)
+	dev, err := os.OpenFile(defaultDeviceName, unix.O_RDWR|unix.O_NOCTTY|unix.O_NONBLOCK, 0666)
 	if err != nil {
 		panic(errors.Wrap(err, "error opening device"))
 	}
 
-	controller := controller{log.New(os.Stderr, "m8client", log.Flags()), &slipReader{}, dev, 0}
+	logger := log.New(os.Stderr, "m8client", log.Flags())
+
+	controller := controller{logger, &slipReader{}, dev, 0}
 	if err := controller.enableAndResetDisplay(); err != nil {
 		panic(err)
 	}
 
 	for {
+		logger.Println("waiting...")
+
 		if err := controller.sendInput(); err != nil {
 			panic(err)
 		}
