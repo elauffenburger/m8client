@@ -22,9 +22,6 @@ func newRenderer(width, height int32) (*renderer, error) {
 		return nil, errors.Wrap(err, "error initializing sdl")
 	}
 
-	_, _ = sdl.ShowCursor(sdl.DISABLE)
-
-	var err error
 	window, err := sdl.CreateWindow(
 		"M8",
 		sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED,
@@ -44,21 +41,26 @@ func newRenderer(width, height int32) (*renderer, error) {
 		return nil, errors.Wrap(err, "error setting renderer logical size")
 	}
 
-	renderer := &renderer{window, sdlRenderer, nil, false, color{}, [screenWidth]sdl.Point{}}
-
-	if err := renderer.initFont(); err != nil {
+	font, err := createFont(sdlRenderer)
+	if err != nil {
 		return nil, errors.Wrap(err, "error initializing font for renderer")
 	}
 
-	return renderer, nil
+	return &renderer{
+		window,
+		sdlRenderer,
+		font,
+		false,
+		color{},
+		[screenWidth]sdl.Point{},
+	}, nil
 }
 
-func (r *renderer) initFont() error {
+func createFont(renderer *sdl.Renderer) (*sdl.Texture, error) {
 	surface, err := sdl.CreateRGBSurfaceWithFormat(0, fontWidth, fontHeight, 32, sdl.PIXELFORMAT_ARGB8888)
 	if err != nil {
-		return errors.Wrap(err, "error creating surface for font")
+		return nil, errors.Wrap(err, "error creating surface for font")
 	}
-
 	defer surface.Free()
 
 	pixels := surface.Pixels()
@@ -79,16 +81,16 @@ func (r *renderer) initFont() error {
 		}
 	}
 
-	r.font, err = r.renderer.CreateTextureFromSurface(surface)
+	font, err := renderer.CreateTextureFromSurface(surface)
 	if err != nil {
-		return errors.Wrap(err, "error creating texture for font")
+		return nil, errors.Wrap(err, "error creating texture for font")
 	}
 
-	if err := r.font.SetBlendMode(sdl.BLENDMODE_BLEND); err != nil {
-		return errors.Wrap(err, "error setting blendmode on font")
+	if err := font.SetBlendMode(sdl.BLENDMODE_BLEND); err != nil {
+		return nil, errors.Wrap(err, "error setting blendmode on font")
 	}
 
-	return nil
+	return font, nil
 }
 
 func (r *renderer) toggleFullscreen() {
@@ -97,9 +99,9 @@ func (r *renderer) toggleFullscreen() {
 }
 
 func (r *renderer) render() error {
-	// if !r.dirty {
-	// 	return nil
-	// }
+	if !r.dirty {
+		return nil
+	}
 
 	r.renderer.Present()
 	return nil

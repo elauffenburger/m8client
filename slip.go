@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/pkg/errors"
@@ -13,14 +12,6 @@ const slipEscEnd = 0xDC
 const slipEscEsc = 0xDD
 
 type slipPacket []byte
-
-type errSlipDecodingFailed struct {
-	remaining []byte
-}
-
-func (e errSlipDecodingFailed) Error() string {
-	return fmt.Sprintf("SLIP decoding failed; remaining data: %v", e.remaining)
-}
 
 type slipReader struct {
 	escaped bool
