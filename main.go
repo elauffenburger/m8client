@@ -12,8 +12,8 @@ import (
 var defaultDeviceName = "/dev/cu.usbmodem136136901"
 
 var (
-	screenWidth  = 640
-	screenHeight = 480
+	screenWidth  int32 = 320
+	screenHeight int32 = 240
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 
 	logger := log.New(os.Stderr, "m8client", log.Flags())
 
-	controller := controller{logger, &slipReader{}, dev, 0}
+	controller := controller{logger, &renderer{}, &slipReader{}, dev, 0}
 	if err := controller.enableAndResetDisplay(); err != nil {
 		panic(err)
 	}

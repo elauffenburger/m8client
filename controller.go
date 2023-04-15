@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/pkg/errors"
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 type controllerContext struct {
@@ -14,9 +15,10 @@ type controllerContext struct {
 type controller struct {
 	logger *log.Logger
 
-	slip   *slipReader
-	device *os.File
-	input  uint8
+	renderer *renderer
+	slip     *slipReader
+	device   *os.File
+	input    uint8
 }
 
 func (c controller) enableAndResetDisplay() error {
@@ -55,7 +57,66 @@ func (c *controller) executeCmd(cmd cmd) error {
 	return cmd.execute(&controllerContext{c.logger})
 }
 
-func (c *controller) getInput() (input input, changed bool, err error) {
+type errQuitRequested struct{}
+
+func (errQuitRequested) Error() string {
+	return "quit requested"
+}
+
+func (c *controller) getInput() (inpt input, changed bool, err error) {
+	ev := sdl.PollEvent()
+	switch ev := ev.(type) {
+	case *sdl.KeyboardEvent:
+		if ev.Type == sdl.KEYUP {
+			switch ev.Keysym.Sym {
+			case sdl.K_RETURN:
+				if ev.Keysym.Mod&sdl.KMOD_ALT > 0 {
+					c.renderer.toggleFullscreen()
+					return 0, false, nil
+				}
+
+			case sdl.K_q:
+				return 0, false, errQuitRequested{}
+			}
+		}
+
+		var key input
+
+		switch ev.Keysym.Sym {
+		case sdl.K_RIGHT, sdl.K_KP_6:
+			key = keyRight
+		case sdl.K_LEFT, sdl.K_KP_4:
+			key = keyLeft
+		case sdl.K_UP, sdl.K_KP_8:
+			key = keyUp
+		case sdl.K_DOWN, sdl.K_KP_2:
+			key = keyDown
+		case sdl.K_x, sdl.K_m, sdl.K_LCTRL, sdl.K_RCTRL:
+			key = keyEdit
+		case sdl.K_z, sdl.K_n, sdl.K_LALT, sdl.K_RALT:
+			key = keyOpt
+		case sdl.K_SPACE:
+			key = keyStart
+		case sdl.K_LSHIFT, sdl.K_RSHIFT:
+			key = keySelect
+		}
+
+		if key == 0 {
+			return 0, false, nil
+		}
+
+		oldInput := c.input
+
+		if ev.State == sdl.PRESSED {
+			c.input |= uint8(key)
+		} else {
+			// Go does not have a bitwise negation operator
+			c.input &= 255 ^ uint8(key)
+		}
+
+		return input(c.input), oldInput != c.input, nil
+	}
+
 	// TODO: impl
 	return 0, false, nil
 }
