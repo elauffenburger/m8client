@@ -23,34 +23,43 @@ func main() {
 		}
 	}()
 
+	logger := log.New(os.Stderr, "m8client", log.Flags())
+
 	dev, err := os.OpenFile(defaultDeviceName, unix.O_RDWR|unix.O_NOCTTY|unix.O_NONBLOCK, 0666)
 	if err != nil {
 		panic(errors.Wrap(err, "error opening device"))
 	}
 
-	logger := log.New(os.Stderr, "m8client", log.Flags())
+	renderer, err := newRenderer(640, 480)
+	if err != nil {
+		panic(errors.Wrap(err, "error creating renderer"))
+	}
 
-	controller := controller{logger, &renderer{}, &slipReader{}, dev, 0}
+	controller := controller{logger, renderer, &slipReader{}, dev, 0}
 	if err := controller.enableAndResetDisplay(); err != nil {
 		panic(err)
 	}
 
-	for {
-		logger.Println("waiting...")
+	go func() {
+		for {
+			logger.Println("waiting...")
 
-		if err := controller.sendInput(); err != nil {
-			panic(err)
-		}
-
-		cmds, err := controller.nextCmds()
-		if err != nil {
-			panic(err)
-		}
-
-		for _, cmd := range cmds {
-			if err := controller.executeCmd(cmd); err != nil {
+			cmds, err := controller.nextCmds()
+			if err != nil {
 				panic(err)
 			}
+
+			for _, cmd := range cmds {
+				if err := controller.executeCmd(cmd); err != nil {
+					panic(err)
+				}
+			}
+		}
+	}()
+
+	for {
+		if err := controller.sendInput(); err != nil {
+			panic(err)
 		}
 	}
 }
