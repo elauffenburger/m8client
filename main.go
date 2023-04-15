@@ -11,7 +11,7 @@ import (
 
 var defaultDeviceName = "/dev/cu.usbmodem136136901"
 
-var (
+const (
 	screenWidth  int32 = 320
 	screenHeight int32 = 240
 )
@@ -53,6 +53,10 @@ func main() {
 				if err := controller.executeCmd(cmd); err != nil {
 					panic(err)
 				}
+			}
+
+			if err := controller.render(); err != nil {
+				panic(errors.Wrap(err, "error rendering"))
 			}
 		}
 	}()

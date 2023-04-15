@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 
 	"github.com/pkg/errors"
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 type cmd interface {
@@ -54,9 +56,32 @@ type DrawRectangleCommand struct {
 }
 
 func (c DrawRectangleCommand) execute(ctrlCtx *controllerContext) error {
-	ctrlCtx.logger.Printf("draw rect: %v\n", c)
+	var (
+		renderer    = ctrlCtx.renderer
+		sdlRenderer = ctrlCtx.renderer.renderer
+	)
 
-	// TODO: impl
+	if c.pos.x == 0 && c.pos.y == 0 && c.size.width == int16(screenWidth) && c.size.height == int16(screenHeight) {
+		renderer.bgColor.r = c.color.r
+		renderer.bgColor.g = c.color.g
+		renderer.bgColor.b = c.color.b
+	}
+
+	if err := sdlRenderer.SetDrawColor(c.color.r, c.color.g, c.color.b, 0xff); err != nil {
+		return err
+	}
+
+	renderRect := sdl.Rect{
+		X: int32(c.pos.x),
+		Y: int32(c.pos.y),
+		W: int32(c.size.width),
+		H: int32(c.size.height),
+	}
+
+	if err := sdlRenderer.FillRect(&renderRect); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -69,9 +94,55 @@ type DrawCharacterCommand struct {
 }
 
 func (c DrawCharacterCommand) execute(ctrlCtx *controllerContext) error {
-	ctrlCtx.logger.Printf("draw ch: %v\n", c)
+	var (
+		renderer    = ctrlCtx.renderer
+		sdlRenderer = renderer.renderer
+		x           = int32(c.pos.x)
+		y           = int32(c.pos.y)
+	)
 
-	// TODO: impl
+	if c.background != c.foreground {
+		if err := sdlRenderer.SetDrawColor(c.background.r, c.background.g, c.background.b, math.MaxUint8); err != nil {
+			return err
+		}
+
+		if err := sdlRenderer.FillRect(&sdl.Rect{
+			X: x - 1,
+			Y: y + 2,
+			W: fontCharWidth - 1,
+			H: fontCharHeight + 1,
+		}); err != nil {
+			return err
+		}
+	}
+
+	if err := ctrlCtx.renderer.font.SetColorMod(c.foreground.r, c.foreground.g, c.foreground.b); err != nil {
+		return err
+	}
+
+	var (
+		row    = c.c / fontCharsByRow
+		column = c.c % fontCharsByRow
+
+		sourceRect = sdl.Rect{
+			X: int32(column * 8),
+			Y: int32(row * 8),
+			W: fontCharWidth,
+			H: fontCharHeight,
+		}
+
+		renderRect = sdl.Rect{
+			X: x,
+			Y: y + 3,
+			W: fontCharWidth,
+			H: fontCharHeight,
+		}
+	)
+
+	if err := sdlRenderer.Copy(renderer.font, &sourceRect, &renderRect); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -82,9 +153,41 @@ type DrawOscilloscopeWaveformCommand struct {
 }
 
 func (c DrawOscilloscopeWaveformCommand) execute(ctrlCtx *controllerContext) error {
-	ctrlCtx.logger.Printf("draw osc wav: %v\n", c)
+	var (
+		renderer    = ctrlCtx.renderer
+		sdlRenderer = renderer.renderer
+	)
 
-	// TODO: impl
+	renderRect := sdl.Rect{
+		X: 0,
+		Y: 0,
+		W: screenWidth,
+		H: screenHeight / 10,
+	}
+
+	if err := sdlRenderer.SetDrawColor(renderer.bgColor.r, renderer.bgColor.g, renderer.bgColor.b, math.MaxUint8); err != nil {
+		return err
+	}
+
+	if err := sdlRenderer.FillRect(&renderRect); err != nil {
+		return err
+	}
+
+	if len(c.waveform) == 0 {
+		return nil
+	}
+
+	_ = sdlRenderer.SetDrawColor(c.color.r, c.color.g, c.color.b, math.MaxUint8)
+
+	for i, y := range c.waveform {
+		renderer.waveform[i].X = int32(i)
+		renderer.waveform[i].Y = int32(y)
+	}
+
+	if err := sdlRenderer.DrawPoints(renderer.waveform[:]); err != nil {
+		return err
+	}
+
 	return nil
 }
 

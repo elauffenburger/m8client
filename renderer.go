@@ -11,6 +11,10 @@ type renderer struct {
 	window   *sdl.Window
 	renderer *sdl.Renderer
 	font     *sdl.Texture
+
+	dirty    bool
+	bgColor  color
+	waveform [screenWidth]sdl.Point
 }
 
 func newRenderer(width, height int32) (*renderer, error) {
@@ -31,7 +35,7 @@ func newRenderer(width, height int32) (*renderer, error) {
 		return nil, errors.Wrap(err, "error creating window")
 	}
 
-	sdlRenderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+	sdlRenderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_SOFTWARE)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating renderer")
 	}
@@ -40,7 +44,7 @@ func newRenderer(width, height int32) (*renderer, error) {
 		return nil, errors.Wrap(err, "error setting renderer logical size")
 	}
 
-	renderer := &renderer{window, sdlRenderer, nil}
+	renderer := &renderer{window, sdlRenderer, nil, false, color{}, [screenWidth]sdl.Point{}}
 
 	if err := renderer.initFont(); err != nil {
 		return nil, errors.Wrap(err, "error initializing font for renderer")
@@ -88,5 +92,15 @@ func (r *renderer) initFont() error {
 }
 
 func (r *renderer) toggleFullscreen() {
+	// TODO: impl
+	panic("not implemented")
+}
 
+func (r *renderer) render() error {
+	// if !r.dirty {
+	// 	return nil
+	// }
+
+	r.renderer.Present()
+	return nil
 }

@@ -9,7 +9,8 @@ import (
 )
 
 type controllerContext struct {
-	logger *log.Logger
+	logger   *log.Logger
+	renderer *renderer
 }
 
 type controller struct {
@@ -54,7 +55,14 @@ func (c *controller) nextCmds() ([]cmd, error) {
 }
 
 func (c *controller) executeCmd(cmd cmd) error {
-	return cmd.execute(&controllerContext{c.logger})
+	if err := cmd.execute(&controllerContext{c.logger, c.renderer}); err != nil {
+		return errors.Wrap(err, "error executing command")
+	}
+
+	// Just assume the renderer is dirty now.
+	c.renderer.dirty = true
+
+	return nil
 }
 
 type errQuitRequested struct{}
@@ -136,4 +144,8 @@ func (c *controller) sendInput() error {
 	}
 
 	return nil
+}
+
+func (c *controller) render() error {
+	return c.renderer.render()
 }
