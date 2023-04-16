@@ -43,7 +43,7 @@ func (c *controller) nextCmds() ([]cmd, error) {
 
 	var cmds []cmd
 	for _, packet := range packets {
-		cmd, err := decodeCommand(packet)
+		cmd, err := c.slip.decodeCommand(packet)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error decoding packet %v as command", packet)
 		}

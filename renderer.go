@@ -56,6 +56,22 @@ func newRenderer(width, height int32) (*renderer, error) {
 	}, nil
 }
 
+func (r *renderer) toggleFullscreen() {
+	// TODO: impl
+	panic("not implemented")
+}
+
+func (r *renderer) render() error {
+	if !r.dirty {
+		return nil
+	}
+
+	r.renderer.Present()
+	r.dirty = false
+
+	return nil
+}
+
 func createFont(renderer *sdl.Renderer) (*sdl.Texture, error) {
 	surface, err := sdl.CreateRGBSurfaceWithFormat(0, fontWidth, fontHeight, 32, sdl.PIXELFORMAT_ARGB8888)
 	if err != nil {
@@ -90,20 +106,4 @@ func createFont(renderer *sdl.Renderer) (*sdl.Texture, error) {
 	}
 
 	return font, nil
-}
-
-func (r *renderer) toggleFullscreen() {
-	// TODO: impl
-	panic("not implemented")
-}
-
-func (r *renderer) render() error {
-	if !r.dirty {
-		return nil
-	}
-
-	r.renderer.Present()
-	r.dirty = false
-
-	return nil
 }
