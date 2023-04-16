@@ -103,5 +103,7 @@ func (r *renderer) render() error {
 	}
 
 	r.renderer.Present()
+	r.dirty = false
+
 	return nil
 }

@@ -35,7 +35,9 @@ func (r *slipReader) decode(data []byte) ([]slipPacket, error) {
 		packet  slipPacket = r.prev
 	)
 
-	for _, ch := range data {
+	for i := 0; i < len(data); i++ {
+		ch := data[i]
+
 		switch ch {
 		case slipEnd:
 			if len(packet) > 0 {
@@ -48,20 +50,17 @@ func (r *slipReader) decode(data []byte) ([]slipPacket, error) {
 
 		case slipEsc:
 			r.escaped = true
-			continue
 
-		case slipEscEnd:
-			if r.escaped {
-				r.escaped = false
+			i++
+			switch ch := data[i]; ch {
+			case slipEscEnd:
 				packet = append(packet, slipEnd)
-			}
 
-			continue
-
-		case slipEscEsc:
-			if r.escaped {
-				r.escaped = false
+			case slipEscEsc:
 				packet = append(packet, slipEsc)
+
+			default:
+				return nil, errors.Errorf("unexpected escaped ch %x", ch)
 			}
 
 			continue

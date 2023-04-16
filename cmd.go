@@ -79,12 +79,6 @@ func decodeCommand(packet []byte) (cmd, error) {
 	// 253 (0xFD) - Draw character command:
 	//    12 bytes. char c, int16 x position, int16 y position, uint8 r, uint8 g, uint8 b, uint8 r_background, uint8 g_background, uint8 b_background
 	case drawCharacteOpCode:
-		// HACK: is this right??
-		if n == 11 {
-			packet = append(packet, 0)
-			n = 12
-		}
-
 		if n != 12 {
 			return nil, errors.WithStack(errInvalidCmdLen{"draw character", 12, packet})
 		}
@@ -244,6 +238,10 @@ func (c DrawOscWaveformCmd) execute(ctrlCtx *controllerContext) error {
 	}
 
 	if err := sdlRenderer.FillRect(&renderRect); err != nil {
+		return err
+	}
+
+	if err := sdlRenderer.DrawRect(&renderRect); err != nil {
 		return err
 	}
 
