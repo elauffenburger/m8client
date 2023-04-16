@@ -63,20 +63,23 @@ func createFont(renderer *sdl.Renderer) (*sdl.Texture, error) {
 	}
 	defer surface.Free()
 
-	pixels := surface.Pixels()
+	var (
+		pixels = surface.Pixels()
+		cols   = int(surface.W*surface.H) / 8
+	)
 
-	l := int(surface.W*surface.H) / 8
-	for i := 0; i < l; i++ {
-		p := fontData[i]
-		for j := 0; j < 8; j++ {
-			var c byte
-			if p&(1<<j) == 0 {
-				c = math.MaxUint8
+	// Map the font data to an 8x8 surface with argb color values.
+	for col := 0; col < cols; col++ {
+		pixel := fontData[col]
+		for row := 0; row < 8; row++ {
+			var color byte
+			if pixel&(1<<row) == 0 {
+				color = math.MaxUint8
 			}
 
 			// Set all 4 color components (ARGB)
-			for k := 0; k < 4; k++ {
-				pixels[(i*8+j)*4+k] = c
+			for cmp := 0; cmp < 4; cmp++ {
+				pixels[(col*8+row)*4+cmp] = color
 			}
 		}
 	}
@@ -84,10 +87,6 @@ func createFont(renderer *sdl.Renderer) (*sdl.Texture, error) {
 	font, err := renderer.CreateTextureFromSurface(surface)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating texture for font")
-	}
-
-	if err := font.SetBlendMode(sdl.BLENDMODE_BLEND); err != nil {
-		return nil, errors.Wrap(err, "error setting blendmode on font")
 	}
 
 	return font, nil
