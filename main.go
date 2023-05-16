@@ -30,7 +30,7 @@ func main() {
 		panic(errors.Wrap(err, "error opening device"))
 	}
 
-	renderer, err := newRenderer(640, 480)
+	renderer, err := newRenderer(1280, 720)
 	if err != nil {
 		panic(errors.Wrap(err, "error creating renderer"))
 	}

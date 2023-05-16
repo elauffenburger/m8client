@@ -157,7 +157,7 @@ func (c DrawOscWaveformCmd) execute(ctrlCtx *controllerContext) error {
 		X: 0,
 		Y: 0,
 		W: screenWidth,
-		H: screenHeight / 10,
+		H: screenHeight / 8,
 	}
 
 	if err := sdlRenderer.SetDrawColor(renderer.bgColor.r, renderer.bgColor.g, renderer.bgColor.b, math.MaxUint8); err != nil {
