@@ -60,7 +60,7 @@ func (c DrawRectCmd) execute(ctrlCtx *controllerContext) error {
 		sdlRenderer = ctrlCtx.renderer.renderer
 	)
 
-	if c.pos.x == 0 && c.pos.y == 0 && c.size.width == int16(screenWidth) && c.size.height == int16(screenHeight) {
+	if c.pos.x == 0 && c.pos.y == 0 && c.size.width == int16(m8ScreenWidth) && c.size.height == int16(m8ScreenHeight) {
 		renderer.bgColor = c.color
 	}
 
@@ -156,8 +156,8 @@ func (c DrawOscWaveformCmd) execute(ctrlCtx *controllerContext) error {
 	renderRect := sdl.Rect{
 		X: 0,
 		Y: 0,
-		W: screenWidth,
-		H: screenHeight / 8,
+		W: m8ScreenWidth,
+		H: m8ScreenHeight / 8,
 	}
 
 	if err := sdlRenderer.SetDrawColor(renderer.bgColor.r, renderer.bgColor.g, renderer.bgColor.b, math.MaxUint8); err != nil {

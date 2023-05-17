@@ -111,8 +111,8 @@ func (r slipReader) decodeCommand(packet []byte) (cmd, error) {
 			return nil, errInvalidCmdLen{"draw osc wave", 4, packet}
 		}
 
-		if waveformLength := n - 4; waveformLength != 0 && waveformLength != int(screenWidth) {
-			return nil, errors.WithStack(errInvalidCmdLen{"draw osc wave data", int(screenWidth), packet})
+		if waveformLength := n - 4; waveformLength != 0 && waveformLength != int(m8ScreenWidth) {
+			return nil, errors.WithStack(errInvalidCmdLen{"draw osc wave data", int(m8ScreenWidth), packet})
 		}
 
 		return DrawOscWaveformCmd{r.decodeColor(packet[1:]), packet[4:]}, nil

@@ -12,8 +12,11 @@ import (
 var defaultDeviceName = "/dev/cu.usbmodem136136901"
 
 const (
-	screenWidth  int32 = 320
-	screenHeight int32 = 240
+	// m8ScreenWidth is the actual width of the m8's screen.
+	m8ScreenWidth int32 = 320
+
+	// m8ScreenHeight is the actual height of the m8's screen.
+	m8ScreenHeight int32 = 240
 )
 
 func main() {
@@ -35,7 +38,19 @@ func main() {
 		panic(errors.Wrap(err, "error creating renderer"))
 	}
 
-	controller := controller{logger, renderer, &slipReader{}, dev, 0}
+	inputReader, err := newInputReader()
+	if err != nil {
+		panic(errors.Wrap(err, "error creating input reader"))
+	}
+
+	controller := controller{
+		logger,
+		renderer,
+		&slipReader{},
+		dev,
+		0,
+		inputReader,
+	}
 	if err := controller.enableAndResetDisplay(); err != nil {
 		panic(err)
 	}
@@ -66,4 +81,14 @@ func main() {
 			panic(err)
 		}
 	}
+}
+
+func newInputReader() (inputReader, error) {
+	// Check if we're using GPIO.
+	if gpioConfig, ok := os.LookupEnv("M8_USE_GPIO"); ok {
+		return newGPIOInputReaderFromStrConfig(gpioConfig)
+	}
+
+	// Otherwise, default to keyboard.
+	return &keyboardInputReader{}, nil
 }

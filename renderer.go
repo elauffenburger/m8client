@@ -14,9 +14,12 @@ type renderer struct {
 
 	dirty    bool
 	bgColor  color
-	waveform [screenWidth]sdl.Point
+	waveform [m8ScreenWidth]sdl.Point
 }
 
+// newRenderer creates a new renderer instance with a window size of width & height.
+//
+// The logical size is fixed to be the actual dimensions of the m8's screen.
 func newRenderer(width, height int32) (*renderer, error) {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		return nil, errors.Wrap(err, "error initializing sdl")
@@ -37,7 +40,7 @@ func newRenderer(width, height int32) (*renderer, error) {
 		return nil, errors.Wrap(err, "error creating renderer")
 	}
 
-	if err := sdlRenderer.SetLogicalSize(screenWidth, screenHeight); err != nil {
+	if err := sdlRenderer.SetLogicalSize(m8ScreenWidth, m8ScreenHeight); err != nil {
 		return nil, errors.Wrap(err, "error setting renderer logical size")
 	}
 
@@ -52,7 +55,7 @@ func newRenderer(width, height int32) (*renderer, error) {
 		font,
 		false,
 		color{},
-		[screenWidth]sdl.Point{},
+		[m8ScreenWidth]sdl.Point{},
 	}, nil
 }
 
