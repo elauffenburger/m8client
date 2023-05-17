@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 
 	"github.com/pkg/errors"
+	gpio "github.com/stianeikeland/go-rpio/v4"
 	"golang.org/x/sys/unix"
 )
 
@@ -93,6 +94,7 @@ func main() {
 func newInputReader() (inputReader, error) {
 	// Check if we're using GPIO.
 	if gpioConfig, ok := os.LookupEnv("M8_USE_GPIO"); ok {
+		gpio.Open()
 		return input.NewGPIOInputReaderFromStrConfig(gpioConfig)
 	}
 
