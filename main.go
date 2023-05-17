@@ -5,6 +5,7 @@ import (
 	"log"
 	"m8client/input"
 	"os"
+	"runtime/debug"
 
 	"github.com/pkg/errors"
 	"golang.org/x/sys/unix"
@@ -23,7 +24,7 @@ const (
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Printf("panic: %+v", err)
+			fmt.Printf("panic: %+v\n%s", err, debug.Stack())
 		}
 	}()
 
