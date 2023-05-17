@@ -51,10 +51,15 @@ func main() {
 		panic(errors.Wrap(err, "error creating input reader"))
 	}
 
+	slipReader, err := newSlipReader(logger)
+	if err != nil {
+		panic(errors.Wrap(err, "error creating slip reader"))
+	}
+
 	controller := controller{
 		logger,
 		renderer,
-		&slipReader{},
+		slipReader,
 		dev,
 		0,
 		inputReader,
@@ -100,4 +105,15 @@ func newInputReader() (inputReader, error) {
 
 	// Otherwise, default to keyboard.
 	return &input.KeyboardInputReader{}, nil
+}
+
+func newSlipReader(logger *log.Logger) (slipRdr, error) {
+	if val, ok := os.LookupEnv("M8_SLIP_LOG_ONLY"); ok && val == "1" {
+		return &logOnlySlipReader{
+			logger: logger,
+			reader: &slipReader{},
+		}, nil
+	}
+
+	return &slipReader{}, nil
 }

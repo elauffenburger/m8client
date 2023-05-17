@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"log"
 	"os"
 
 	"github.com/pkg/errors"
@@ -19,7 +20,7 @@ type slipReader struct {
 	prev    []byte
 }
 
-func (r *slipReader) read(dev *os.File) ([]byte, error) {
+func (r *slipReader) Read(dev *os.File) ([]byte, error) {
 	buf := make([]byte, 4*1024)
 
 	n, err := dev.Read(buf)
@@ -30,7 +31,7 @@ func (r *slipReader) read(dev *os.File) ([]byte, error) {
 	return buf[:n], nil
 }
 
-func (r *slipReader) decode(data []byte) ([]slipPacket, error) {
+func (r *slipReader) Decode(data []byte) ([]slipPacket, error) {
 	var (
 		packets []slipPacket
 		packet  slipPacket = r.prev
@@ -76,8 +77,8 @@ func (r *slipReader) decode(data []byte) ([]slipPacket, error) {
 	return packets, nil
 }
 
-// decodeCommand decodes the given M8 SLIP command packet
-func (r slipReader) decodeCommand(packet []byte) (cmd, error) {
+// DecodeCommand decodes the given M8 SLIP command packet
+func (r slipReader) DecodeCommand(packet []byte) (cmd, error) {
 	n := len(packet)
 	if n == 0 {
 		return nil, errors.New("empty packet")
@@ -145,4 +146,44 @@ func (r slipReader) decodeSize(data []byte) size {
 
 func (r slipReader) decodeColor(data []byte) color {
 	return color{data[0], data[1], data[2]}
+}
+
+type logOnlySlipReader struct {
+	logger *log.Logger
+	reader slipRdr
+}
+
+func (r *logOnlySlipReader) Read(dev *os.File) ([]byte, error) {
+	buf, err := r.reader.Read(dev)
+	if err != nil {
+		return nil, err
+	}
+
+	r.logger.Printf("read bytes: %v\n", buf)
+
+	return buf, nil
+}
+
+func (r *logOnlySlipReader) Decode(data []byte) ([]slipPacket, error) {
+	packets, err := r.reader.Decode(data)
+	if err != nil {
+		return nil, err
+	}
+
+	r.logger.Printf("decoded packets: %v\n", packets)
+
+	return packets, err
+}
+
+// DecodeCommand decodes the given M8 SLIP command packet
+func (r *logOnlySlipReader) DecodeCommand(packet []byte) (cmd, error) {
+	cmd, err := r.reader.DecodeCommand(packet)
+	if err != nil {
+		r.logger.Printf("error decoding packet: %s; ignoring.\npacket: %v\n", err, packet)
+
+		return nil, nil
+	}
+
+	r.logger.Printf("decoded command: %v\n", cmd)
+	return cmd, nil
 }

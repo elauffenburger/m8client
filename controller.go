@@ -13,11 +13,17 @@ type controllerContext struct {
 	renderer *renderer
 }
 
+type slipRdr interface {
+	Read(*os.File) ([]byte, error)
+	Decode([]byte) ([]slipPacket, error)
+	DecodeCommand([]byte) (cmd, error)
+}
+
 type controller struct {
 	logger *log.Logger
 
 	renderer *renderer
-	slip     *slipReader
+	slip     slipRdr
 	device   *os.File
 
 	lastInput   input.CmdKey
@@ -33,19 +39,19 @@ func (c controller) enableAndResetDisplay() error {
 }
 
 func (c *controller) nextCmds() ([]cmd, error) {
-	buf, err := c.slip.read(c.device)
+	buf, err := c.slip.Read(c.device)
 	if err != nil {
 		return nil, err
 	}
 
-	packets, err := c.slip.decode(buf)
+	packets, err := c.slip.Decode(buf)
 	if err != nil {
 		return nil, err
 	}
 
 	var cmds []cmd
 	for _, packet := range packets {
-		cmd, err := c.slip.decodeCommand(packet)
+		cmd, err := c.slip.DecodeCommand(packet)
 		if err != nil {
 			return nil, errors.Wrapf(err, "error decoding packet %v as command", packet)
 		}
