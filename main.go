@@ -29,7 +29,12 @@ func main() {
 
 	logger := log.New(os.Stderr, "m8client", log.Flags())
 
-	dev, err := os.OpenFile(defaultDeviceName, unix.O_RDWR|unix.O_NOCTTY|unix.O_NONBLOCK, 0666)
+	devName := defaultDeviceName
+	if val, ok := os.LookupEnv("M8_DEV"); ok {
+		devName = val
+	}
+
+	dev, err := os.OpenFile(devName, unix.O_RDWR|unix.O_NOCTTY|unix.O_NONBLOCK, 0666)
 	if err != nil {
 		panic(errors.Wrap(err, "error opening device"))
 	}
