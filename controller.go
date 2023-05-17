@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"m8client/input"
 	"os"
 
 	"github.com/pkg/errors"
@@ -19,7 +20,7 @@ type controller struct {
 	slip     *slipReader
 	device   *os.File
 
-	lastInput   normalInputCmd
+	lastInput   input.CmdKey
 	inputReader inputReader
 }
 
@@ -73,13 +74,13 @@ func (errQuitRequested) Error() string {
 }
 
 func (c *controller) sendInput() error {
-	input, err := c.inputReader.getInput()
+	inpt, err := c.inputReader.GetInput()
 	if err != nil {
 		return errors.Wrap(err, "error updating input")
 	}
 
-	switch val := input.(type) {
-	case normalInputCmd:
+	switch val := inpt.(type) {
+	case input.CmdKey:
 		// If nothing's changed, bail.
 		if c.lastInput == val {
 			return nil
@@ -95,11 +96,11 @@ func (c *controller) sendInput() error {
 
 		return nil
 
-	case fullscreenInputCmd:
+	case input.CmdRequestFullScreen:
 		c.renderer.toggleFullscreen()
 		return nil
 
-	case exitInputCmd:
+	case input.CmdRequestExit:
 		// todo: is this right? should we do something better?
 		return errQuitRequested{}
 

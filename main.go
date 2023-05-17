@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"m8client/input"
 	"os"
 
 	"github.com/pkg/errors"
@@ -86,9 +87,9 @@ func main() {
 func newInputReader() (inputReader, error) {
 	// Check if we're using GPIO.
 	if gpioConfig, ok := os.LookupEnv("M8_USE_GPIO"); ok {
-		return newGPIOInputReaderFromStrConfig(gpioConfig)
+		return input.NewGPIOInputReaderFromStrConfig(gpioConfig)
 	}
 
 	// Otherwise, default to keyboard.
-	return &keyboardInputReader{}, nil
+	return &input.KeyboardInputReader{}, nil
 }
