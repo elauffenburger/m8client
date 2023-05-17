@@ -148,12 +148,12 @@ func (r slipReader) decodeColor(data []byte) color {
 	return color{data[0], data[1], data[2]}
 }
 
-type logOnlySlipReader struct {
+type safeSlipReader struct {
 	logger *log.Logger
 	reader slipRdr
 }
 
-func (r *logOnlySlipReader) Read(dev *os.File) ([]byte, error) {
+func (r *safeSlipReader) Read(dev *os.File) ([]byte, error) {
 	buf, err := r.reader.Read(dev)
 	if err != nil {
 		return nil, err
@@ -164,7 +164,7 @@ func (r *logOnlySlipReader) Read(dev *os.File) ([]byte, error) {
 	return buf, nil
 }
 
-func (r *logOnlySlipReader) Decode(data []byte) ([]slipPacket, error) {
+func (r *safeSlipReader) Decode(data []byte) ([]slipPacket, error) {
 	packets, err := r.reader.Decode(data)
 	if err != nil {
 		return nil, err
@@ -176,12 +176,12 @@ func (r *logOnlySlipReader) Decode(data []byte) ([]slipPacket, error) {
 }
 
 // DecodeCommand decodes the given M8 SLIP command packet
-func (r *logOnlySlipReader) DecodeCommand(packet []byte) (cmd, error) {
+func (r *safeSlipReader) DecodeCommand(packet []byte) (cmd, error) {
 	cmd, err := r.reader.DecodeCommand(packet)
 	if err != nil {
 		r.logger.Printf("error decoding packet: %s; ignoring.\npacket: %v\n", err, packet)
 
-		return nil, nil
+		return &NoOpCmd{}, nil
 	}
 
 	r.logger.Printf("decoded command: %v\n", cmd)

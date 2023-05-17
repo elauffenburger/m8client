@@ -48,6 +48,12 @@ func (e errInvalidCmdLen) Error() string {
 	return fmt.Sprintf("invalid %s packet; expected %d bytes; actual %d bytes; buffer: %x", e.cmdName, e.expectedLen, len(e.buf), e.buf)
 }
 
+type NoOpCmd struct{}
+
+func (c NoOpCmd) execute(ctrlCtx *controllerContext) error {
+	return nil
+}
+
 type DrawRectCmd struct {
 	pos   position
 	size  size

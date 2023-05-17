@@ -108,8 +108,8 @@ func newInputReader() (inputReader, error) {
 }
 
 func newSlipReader(logger *log.Logger) (slipRdr, error) {
-	if val, ok := os.LookupEnv("M8_SLIP_LOG_ONLY"); ok && val == "1" {
-		return &logOnlySlipReader{
+	if val, ok := os.LookupEnv("M8_SLIP_SAFE"); ok && val == "1" {
+		return &safeSlipReader{
 			logger: logger,
 			reader: &slipReader{},
 		}, nil
