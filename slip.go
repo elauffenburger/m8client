@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/binary"
+	"fmt"
 	"log"
+	"strings"
 	"os"
 
 	"github.com/pkg/errors"
@@ -159,7 +161,14 @@ func (r *safeSlipReader) Read(dev *os.File) ([]byte, error) {
 		return nil, err
 	}
 
-	r.logger.Printf("read bytes: %v\n", buf)
+	{
+		var formattedBuf []string
+		for _, byt := range buf {
+			formattedBuf = append(formattedBuf, fmt.Sprintf("%X", byt))	
+		}
+
+		r.logger.Printf("read bytes: %v\n", strings.Join(formattedBuf, " "))
+	}
 
 	return buf, nil
 }
@@ -170,8 +179,6 @@ func (r *safeSlipReader) Decode(data []byte) ([]slipPacket, error) {
 		return nil, err
 	}
 
-	r.logger.Printf("decoded packets: %v\n", packets)
-
 	return packets, err
 }
 
@@ -179,11 +186,10 @@ func (r *safeSlipReader) Decode(data []byte) ([]slipPacket, error) {
 func (r *safeSlipReader) DecodeCommand(packet []byte) (cmd, error) {
 	cmd, err := r.reader.DecodeCommand(packet)
 	if err != nil {
-		r.logger.Printf("error decoding packet: %s; ignoring.\npacket: %v\n", err, packet)
+		r.logger.Printf("error decoding packet: %s; ignoring.\npacket: %x\n", err, packet)
 
 		return &NoOpCmd{}, nil
 	}
 
-	r.logger.Printf("decoded command: %v\n", cmd)
 	return cmd, nil
 }

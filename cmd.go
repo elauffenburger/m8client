@@ -202,8 +202,6 @@ type JoypadKeyPressedCmd struct {
 }
 
 func (c JoypadKeyPressedCmd) execute(ctrlCtx *controllerContext) error {
-	ctrlCtx.logger.Printf("joypad key pressed: %v", c)
-
 	// TODO: impl
 	return nil
 }
