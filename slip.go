@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"os"
+	"io"
 
 	"github.com/pkg/errors"
 )
@@ -22,7 +22,7 @@ type slipReader struct {
 	prev    []byte
 }
 
-func (r *slipReader) Read(dev *os.File) ([]byte, error) {
+func (r *slipReader) Read(dev io.ReadWriter) ([]byte, error) {
 	buf := make([]byte, 4*1024)
 
 	n, err := dev.Read(buf)
@@ -155,7 +155,7 @@ type safeSlipReader struct {
 	reader slipRdr
 }
 
-func (r *safeSlipReader) Read(dev *os.File) ([]byte, error) {
+func (r *safeSlipReader) Read(dev io.ReadWriter) ([]byte, error) {
 	buf, err := r.reader.Read(dev)
 	if err != nil {
 		return nil, err
