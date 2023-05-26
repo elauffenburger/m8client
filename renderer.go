@@ -29,7 +29,7 @@ func newRenderer(width, height int32) (*renderer, error) {
 		"M8",
 		sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED,
 		width, height,
-		sdl.WINDOW_SHOWN,
+		sdl.WINDOW_SHOWN | sdl.WINDOW_FULLSCREEN,
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating window")
