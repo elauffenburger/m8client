@@ -86,7 +86,7 @@ func NewGPIOInputReaderFromStrConfig(config string) (*GPIOInputReader, error) {
 		pinName, pinValueStr := gpioInputReaderPinName(strings.ToLower(pinCfgParts[0])), pinCfgParts[1]
 		pinValue, err := strconv.Atoi(pinValueStr)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not parse pin %s's value")
+			return nil, errors.Wrapf(err, "could not parse pin %s's value", pinName)
 		}
 
 		pin, ok := pinMap[pinName]
