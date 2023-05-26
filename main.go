@@ -6,6 +6,7 @@ import (
 	"m8client/input"
 	"os"
 	"runtime/debug"
+	"time"
 
 	"github.com/pkg/errors"
 	gpio "github.com/stianeikeland/go-rpio/v4"
@@ -93,6 +94,8 @@ func main() {
 	}()
 
 	for {
+		<-time.After(controller.inputReader.PollRate())
+
 		if err := controller.sendInput(); err != nil {
 			panic(err)
 		}

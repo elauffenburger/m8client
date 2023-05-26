@@ -1,9 +1,17 @@
 package input
 
-import "github.com/veandco/go-sdl2/sdl"
+import (
+	"time"
+
+	"github.com/veandco/go-sdl2/sdl"
+)
 
 type KeyboardInputReader struct {
 	input uint8
+}
+
+func (r *KeyboardInputReader) PollRate() time.Duration {
+	return 0
 }
 
 func (r *KeyboardInputReader) GetInput() (Cmd, error) {

@@ -3,12 +3,15 @@ package input
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	gpio "github.com/stianeikeland/go-rpio/v4"
 )
 
 type GPIOInputReader struct {
+	pollRate time.Duration
+
 	pins  gpioInputReaderPins
 	input uint8
 }
@@ -67,34 +70,52 @@ const (
 
 func NewGPIOInputReaderFromStrConfig(config string) (*GPIOInputReader, error) {
 	var (
-		rdr    GPIOInputReader
+		rdr = GPIOInputReader{
+			pollRate: 50 * time.Millisecond,
+		}
 		pinMap = rdr.pins.pinMap()
 	)
 
 	for _, pinCfg := range strings.Split(config, ";") {
-		pinCfgParts := strings.Split(pinCfg, "=")
-		if len(pinCfgParts) != 2 {
-			// Try to get the pin (if any).
-			var pin string
-			if len(pinCfgParts) > 0 {
-				pin = pinCfgParts[0]
+		cfgParts := strings.Split(pinCfg, "=")
+		if len(cfgParts) != 2 {
+			// Try to get the key (if any).
+			var key string
+			if len(cfgParts) > 0 {
+				key = cfgParts[0]
 			}
 
-			return nil, errors.Errorf("bad pin config for GPIO\nconfig:'%s'\nbad pin: %s", config, pin)
+			return nil, errors.Errorf("bad config key for GPIO\nconfig:'%s'\nbad key: %s", config, key)
 		}
 
-		pinName, pinValueStr := gpioInputReaderPinName(strings.ToLower(pinCfgParts[0])), pinCfgParts[1]
-		pinValue, err := strconv.Atoi(pinValueStr)
-		if err != nil {
-			return nil, errors.Wrapf(err, "could not parse pin %s's value", pinName)
-		}
+		var (
+			key   = strings.ToLower(cfgParts[0])
+			value = cfgParts[1]
+		)
 
-		pin, ok := pinMap[pinName]
-		if !ok {
-			return nil, errors.Errorf("unknown pin %s", pinName)
-		}
+		switch key {
+		case "poll_rate_ms":
+			pollRateMs, err := strconv.Atoi(value)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not parse poll_rate_ms")
+			}
 
-		*pin = pinValue
+			rdr.pollRate = time.Duration(pollRateMs) * time.Millisecond
+
+		default:
+			pinName, pinValueStr := gpioInputReaderPinName(key), value
+			pinValue, err := strconv.Atoi(pinValueStr)
+			if err != nil {
+				return nil, errors.Wrapf(err, "could not parse pin %s's value", pinName)
+			}
+
+			pin, ok := pinMap[pinName]
+			if !ok {
+				return nil, errors.Errorf("unknown pin %s", pinName)
+			}
+
+			*pin = pinValue
+		}
 	}
 
 	// Make sure we configured all the pins.
@@ -105,6 +126,10 @@ func NewGPIOInputReaderFromStrConfig(config string) (*GPIOInputReader, error) {
 	}
 
 	return &rdr, nil
+}
+
+func (r GPIOInputReader) PollRate() time.Duration {
+	return r.pollRate
 }
 
 func (r *GPIOInputReader) GetInput() (Cmd, error) {
