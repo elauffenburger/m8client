@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	gpio "github.com/stianeikeland/go-rpio/v4"
-	"golang.org/x/sys/unix"
+	"go.bug.st/serial"
 )
 
 var defaultDeviceName = "/dev/cu.usbmodem136136901"
@@ -36,7 +36,10 @@ func main() {
 		devName = val
 	}
 
-	dev, err := os.OpenFile(devName, unix.O_RDWR|unix.O_NOCTTY|unix.O_NONBLOCK, 0666)
+	dev, err := serial.Open(devName, &serial.Mode{
+		BaudRate: 9000,
+		Parity:   serial.NoParity,
+	})
 	if err != nil {
 		panic(errors.Wrap(err, "error opening device"))
 	}

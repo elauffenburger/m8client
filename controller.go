@@ -1,9 +1,9 @@
 package main
 
 import (
+	"io"
 	"log"
 	"m8client/input"
-	"os"
 
 	"github.com/pkg/errors"
 )
@@ -14,7 +14,7 @@ type controllerContext struct {
 }
 
 type slipRdr interface {
-	Read(*os.File) ([]byte, error)
+	Read(io.ReadWriter) ([]byte, error)
 	Decode([]byte) ([]slipPacket, error)
 	DecodeCommand([]byte) (cmd, error)
 }
@@ -24,7 +24,7 @@ type controller struct {
 
 	renderer *renderer
 	slip     slipRdr
-	device   *os.File
+	device   io.ReadWriter
 
 	lastInput   input.CmdKey
 	inputReader inputReader
